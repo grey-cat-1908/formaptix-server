@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "inputly-server"
+version = "0.1.0"
+description = "Simple forms service backend"
+authors = ["Viktor K. <tech@arbuz.icu>"]
+license = "APGL-3.0-only"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+uvicorn = "^0.30.5"
+fastapi = "^0.112.0"
+pydantic = "^2.8.2"
+SQLAlchemy = "^2.0.32"
+pydantic-settings = "^2.4.0"
+asyncpg = "^0.29.0"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+mypy = "^1.11.1"
+black = "^24.8.0"
+
+[tool.mypy]
+plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_untyped_calls = true
+
+[tool.isort]
+profile = "black"
+filter_files = true
+skip = ["__init__.py"]

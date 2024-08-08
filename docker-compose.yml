@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  inputly-server:
+    build: "."
+    restart: "always"
+
+    environment:
+      - DATABASE=postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@inputly-database:5432/${DATABASE_NAME}
+      - SECRET=${SECRET}
+      - PORT=${PORT}
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - inputly-database
+
+  inputly-database:
+    image: "postgres:bullseye"
+    restart: "always"
+
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    volumes:
+      - inputly-database:/var/lib/postgresql/data
+
+volumes:
+  inputly-database:
