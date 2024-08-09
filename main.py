@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 import models
 import database
-import endpoints
+import routes
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,6 +19,6 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(endpoints.router)
+app.include_router(routes.router)
 
 uvicorn.run(app, host="0.0.0.0", port=models.settings.port)

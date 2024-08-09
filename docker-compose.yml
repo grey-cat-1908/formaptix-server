@@ -9,6 +9,8 @@ services:
       - DATABASE=postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@inputly-database:5432/${DATABASE_NAME}
       - SECRET=${SECRET}
       - PORT=${PORT}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - DISABLE_ADMIN=${DISABLE_ADMIN}
     ports:
       - ${PORT}:${PORT}
     depends_on:

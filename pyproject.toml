@@ -3,7 +3,7 @@ name = "inputly-server"
 version = "0.1.0"
 description = "Simple forms service backend"
 authors = ["Viktor K. <tech@arbuz.icu>"]
-license = "APGL-3.0-only"
+license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
