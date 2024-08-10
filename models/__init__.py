@@ -3,7 +3,7 @@ import pydantic
 
 class BaseModel(pydantic.BaseModel):
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 from .settings import settings

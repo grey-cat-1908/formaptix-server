@@ -17,3 +17,11 @@ class Token(BaseModel):
     id: int
     username: str
     token: str
+
+
+class DeleteUser(BaseModel):
+    username: str
+
+
+class UpdatePassword(BaseModel):
+    password: str

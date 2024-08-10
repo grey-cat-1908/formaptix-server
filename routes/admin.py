@@ -1,27 +1,13 @@
 import secrets
-from typing import Annotated
-import hashlib
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, HTTPException
+from sqlalchemy import select, delete
 
 import database
-from models import settings, user
+from models import settings, user, DeleteUser
+from .utils import Admin, hash_password
 
 router = APIRouter(prefix="/admin")
-
-
-def hash_password(password: str, salt: str) -> str:
-    return hashlib.sha512((password + salt).encode('utf-8')).hexdigest()
-
-
-def verify_admin(token: str):
-    if token != settings.admin_password:
-        raise HTTPException(401, "Unauthorized")
-    return True
-
-
-Admin = Annotated[bool, Depends(verify_admin, use_cache=False)]
 
 
 @router.post("/user")
@@ -36,17 +22,26 @@ async def create_user(auth: user.Auth, admin_token: Admin):
     salt = secrets.token_hex(8)
 
     async with database.sessions.begin() as session:
-        stmt = select(database.User).where(database.User.username == auth.username)
-        db_user = session.execute(stmt).scalar_one_or_none()
-        if db_user is not None:
+        stmt = select(database.User).where(
+            database.User.username == auth.username.strip()
+        )
+        db_request = await session.execute(stmt)
+        user = db_request.scalar_one_or_none()
+        if user is not None:
             raise HTTPException(400, "User with this username already exists")
 
         new_user = database.User(
-            username=auth.username,
-            password=hash_password(auth.password, salt),
+            username=auth.username.strip(),
+            password=hash_password(auth.password.strip(), salt),
             salt=salt,
         )
         session.add(new_user)
-        await session.flush()
 
-        return {'status': 'Success'}
+
+@router.delete("/user")
+async def delete_user(user: DeleteUser, admin_token: Admin):
+    async with database.sessions.begin() as session:
+        stmt = delete(database.User).where(
+            database.User.username == user.username.strip()
+        )
+        await session.execute(stmt)
