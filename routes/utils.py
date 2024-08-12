@@ -43,6 +43,7 @@ async def verify_user(token: Annotated[str, Header(alias="x-token")]) -> databas
         except jwt.exceptions.InvalidSignatureError:
             raise HTTPException(401, "Invalid token")
 
+        session.expunge(user)
         return user
 
 

@@ -8,3 +8,4 @@ class BaseModel(pydantic.BaseModel):
 
 from .settings import settings
 from .user import *
+from .form import *

@@ -11,3 +11,4 @@ class Base(DeclarativeBase):
 
 
 from .user import User
+from .form import Form

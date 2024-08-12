@@ -13,7 +13,7 @@ router = APIRouter(prefix="/user")
 
 
 @router.post("/login")
-async def login(auth: models.Auth):
+async def login(auth: models.Auth) -> models.Token:
     async with database.sessions.begin() as session:
         stmt = select(database.User).where(
             database.User.username == auth.username.strip()
