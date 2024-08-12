@@ -2,14 +2,18 @@ from fastapi import APIRouter
 from sqlalchemy import select
 
 import database
-from models import FormData, Form
+from models import FormData, Form, BaseModel
 from .utils import User
 
 router = APIRouter(prefix="/form")
 
 
+class CreateForm(BaseModel):
+    form_id: int
+
+
 @router.post("/create")
-async def create_form(user: User, form_data: FormData):
+async def create_form(user: User, form_data: FormData) -> CreateForm:
     async with database.sessions.begin() as session:
         form = database.Form(
             name=form_data.name, owner_id=user.id, data=form_data.model_dump()
@@ -19,7 +23,7 @@ async def create_form(user: User, form_data: FormData):
         await session.flush()
         await session.refresh(form)
 
-        return {"status": "success", "form_id": form.id}
+        return CreateForm(form_id=form.id)
 
 
 @router.get("/my")
