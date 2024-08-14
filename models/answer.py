@@ -37,11 +37,7 @@ class SelectorValue(BaseValue):
     values: set[int]
 
     def validate(self, question: form.SelectorQuestion) -> None:
-        min_values = (
-            max(question.min_values, 1)
-            if question.min_values
-            else 1
-        )
+        min_values = max(question.min_values, 1) if question.min_values else 1
         max_values = (
             min(question.max_values, question.options)
             if question.max_values
@@ -72,9 +68,8 @@ class AnswerData(BaseValue):
             uuids.add(value.question_id)
 
         if len(v) != len(uuids):
-            raise ValueError(
-                AnswerError.DUPLICATE_QUESTIONS
-            )
+            raise ValueError(AnswerError.DUPLICATE_QUESTIONS)
+
 
 class Answer(BaseModel):
     id: int
@@ -83,20 +78,16 @@ class Answer(BaseModel):
 
     @field_validator("data")
     @classmethod
-    def answer_validator(
-        cls,
-        v,
-        info
-    ):
+    def answer_validator(cls, v, info):
         uuids = v.question_uuids
         questions = info.data["form"].data
         for question in questions:
             if question.required and question.id not in uuids:
                 raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED)
             if question.question_type != uuids[question.id].question_type:
-                raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED) 
+                raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED)
             del uuids[question.id]
 
         if len(uuids) > 0:
-            raise ValueError("Some questions are not known")
+            raise ValueError(AnswerError.INCORRECT_IDS)
         return v
