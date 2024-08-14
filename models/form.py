@@ -1,5 +1,6 @@
 from enum import IntEnum, auto
 from typing import TypeAlias
+from uuid import UUID, uuid4
 
 from pydantic import Field, field_validator
 
@@ -12,6 +13,7 @@ class QuestionType(IntEnum):
 
 
 class BaseQuestion(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
     question_type: QuestionType
     label: str = Field(min_length=1)
     description: str | None = Field(None, min_length=1)
@@ -79,6 +81,26 @@ class FormData(BaseModel):
     name: str = Field(min_length=1)
     description: str | None = Field(None, min_length=1)
     questions: list[Question] = []
+
+    @field_validator("questions")
+    @classmethod
+    def validate_questions(
+        cls,
+        v,
+        info
+    ):
+        questions = info.data.get("questions")
+        
+        uuids = set()
+        for question in questions:
+            uuids.add(question.question_id)
+
+        if len(questions) != len(uuids):
+            raise ValueError(
+                "All questions must have different id's"
+            )
+
+        return v
 
 
 class Form(BaseModel):

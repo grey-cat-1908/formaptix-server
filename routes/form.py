@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
 import database
@@ -24,6 +24,23 @@ async def create_form(user: User, form_data: FormData) -> CreateForm:
         await session.refresh(form)
 
         return CreateForm(form_id=form.id)
+
+
+@router.delete("/delete")
+async def delete_form(user: User, id: int):
+    async with database.sessions.begin() as session:
+        stmt = select(database.Form).where(
+            database.Form.id == id
+        )
+        db_request = await session.execute(stmt)
+        form = db_request.scalar_one_or_none()
+
+        if form is None:
+            raise HTTPException(404, "No form was found")
+        if form.owner_id != user.id:
+            raise HTTPException(403, "Forbidden")
+        
+        await session.delete(form)
 
 
 @router.get("/my")
