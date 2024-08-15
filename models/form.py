@@ -46,7 +46,7 @@ class TextQuestion(BaseQuestion):
     @classmethod
     def validate_min_length(cls, v, info):
         if v is not None and v < 0:
-            raise ValueError(FormError.MIN_LENGTH_ERR)
+            raise ValueError(FormError.MIN_LENGTH_ERR.value)
         return v
 
     @field_validator("max_length")
@@ -55,9 +55,9 @@ class TextQuestion(BaseQuestion):
         min_length = info.data.get("min_length")
         if v is not None:
             if v <= 0:
-                raise ValueError(FormError.MAX_LENGTH_TOO_SMALL)
+                raise ValueError(FormError.MAX_LENGTH_TOO_SMALL.value)
             if min_length is not None and v < min_length:
-                raise ValueError(FormError.MAX_LENGTH_LESS_THAN_MIN_LENGTH)
+                raise ValueError(FormError.MAX_LENGTH_LESS_THAN_MIN_LENGTH.value)
         return v
 
 
@@ -73,7 +73,7 @@ class SelectorQuestion(BaseQuestion):
         options = info.data.get("options")
         options = [] if not options else options
         if v is not None and (v < 1 or v > len(options)):
-            raise ValueError(FormError.MIN_VALUES_ERR)
+            raise ValueError(FormError.MIN_VALUES_ERR.value)
         return v
 
     @field_validator("max_values")
@@ -82,7 +82,7 @@ class SelectorQuestion(BaseQuestion):
         min_values = info.data.get("min_values")
         options = info.data.get("options")
         if v is not None and (v > len(options) or min_values > v):
-            raise ValueError(FormError.MAX_VALUES_ERR)
+            raise ValueError(FormError.MAX_VALUES_ERR.value)
         return v
 
 
@@ -102,7 +102,7 @@ class FormData(BaseModel):
             uuids.add(question.id)
 
         if len(v) != len(uuids):
-            raise ValueError(FormError.SIMMILAR_ID_ERR)
+            raise ValueError(FormError.SIMMILAR_ID_ERR.value)
 
         return v
 

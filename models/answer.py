@@ -2,7 +2,7 @@ from enum import Enum
 from uuid import UUID
 from typing import TypeAlias
 
-from pydantic import field_validator
+from pydantic import field_validator, field_serializer
 
 from models import BaseModel, form
 
@@ -20,6 +20,10 @@ class BaseValue(BaseModel):
     question_id: UUID
     question_type: form.QuestionType
 
+    @field_serializer("question_id")
+    def serialize_id(self, id: UUID):
+        return str(id)
+
 
 class TextValue(BaseValue):
     question_type: form.QuestionType = form.QuestionType.text
@@ -27,9 +31,9 @@ class TextValue(BaseValue):
 
     def validate(self, question: form.TextQuestion) -> None:
         if question.min_length and len(self.value) < question.min_length:
-            raise ValueError(AnswerError.TOO_SHORT)
+            raise ValueError(AnswerError.TOO_SHORT.value)
         if question.max_length and len(self.value) > question.max_length:
-            raise ValueError(AnswerError.TOO_LONG)
+            raise ValueError(AnswerError.TOO_LONG.value)
 
 
 class SelectorValue(BaseValue):
@@ -45,15 +49,15 @@ class SelectorValue(BaseValue):
         )
 
         if len(self.values) < min_values:
-            raise ValueError(AnswerError.TOO_FEW_SELECTED)
+            raise ValueError(AnswerError.TOO_FEW_SELECTED.value)
         if len(self.values) > max_values:
-            raise ValueError(AnswerError.TOO_MANY_SELECTED)
+            raise ValueError(AnswerError.TOO_MANY_SELECTED.value)
 
 
 Value: TypeAlias = SelectorValue | TextValue
 
 
-class AnswerData(BaseValue):
+class AnswerData(BaseModel):
     values: list[Value]
 
     @property
@@ -68,7 +72,9 @@ class AnswerData(BaseValue):
             uuids.add(value.question_id)
 
         if len(v) != len(uuids):
-            raise ValueError(AnswerError.DUPLICATE_QUESTIONS)
+            raise ValueError(AnswerError.DUPLICATE_QUESTIONS.value)
+
+        return v
 
 
 class Answer(BaseModel):
@@ -80,14 +86,16 @@ class Answer(BaseModel):
     @classmethod
     def answer_validator(cls, v, info):
         uuids = v.question_uuids
-        questions = info.data["form"].data
+        questions = info.data["form"].data.questions
         for question in questions:
             if question.required and question.id not in uuids:
-                raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED)
+                raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED.value)
             if question.question_type != uuids[question.id].question_type:
-                raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED)
+                raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED.value)
+            uuids[question.id].validate(question)
+
             del uuids[question.id]
 
         if len(uuids) > 0:
-            raise ValueError(AnswerError.INCORRECT_IDS)
+            raise ValueError(AnswerError.INCORRECT_IDS.value)
         return v

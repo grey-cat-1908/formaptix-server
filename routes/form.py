@@ -2,18 +2,14 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
 import database
-from models import FormData, Form, BaseModel
+from models import FormData, Form
 from .utils import User
 
 router = APIRouter(prefix="/form")
 
 
-class CreateForm(BaseModel):
-    form_id: int
-
-
 @router.post("/create")
-async def create_form(user: User, form_data: FormData) -> CreateForm:
+async def create_form(user: User, form_data: FormData) -> Form:
     async with database.sessions.begin() as session:
         form = database.Form(
             name=form_data.name, owner_id=user.id, data=form_data.model_dump()
@@ -23,7 +19,7 @@ async def create_form(user: User, form_data: FormData) -> CreateForm:
         await session.flush()
         await session.refresh(form)
 
-        return CreateForm(form_id=form.id)
+        return Form.model_validate(form)
 
 
 @router.delete("/delete")
@@ -34,14 +30,14 @@ async def delete_form(user: User, id: int):
         form = db_request.scalar_one_or_none()
 
         if form is None:
-            raise HTTPException(404, "No form was found")
+            raise HTTPException(404, "Form not found")
         if form.owner_id != user.id:
             raise HTTPException(403, "Forbidden")
 
         await session.delete(form)
 
 
-@router.get("/my")
+@router.get("/list")
 async def user_forms(user: User):
     async with database.sessions.begin() as session:
         return {
@@ -52,3 +48,13 @@ async def user_forms(user: User):
                 )
             ]
         }
+
+
+@router.get("/get")
+async def get_form(id: int) -> Form:
+    async with database.sessions.begin() as session:
+        stmt = select(database.Form).where(database.Form.id == id)
+        db_request = await session.execute(stmt)
+        form = db_request.scalar_one_or_none()
+
+        return Form.model_validate(form)
