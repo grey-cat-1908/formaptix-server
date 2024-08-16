@@ -1,8 +1,8 @@
 from enum import Enum
 from uuid import UUID
-from typing import TypeAlias
+from typing import TypeAlias, Annotated
 
-from pydantic import field_validator, field_serializer
+from pydantic import field_validator, field_serializer, Field
 
 from models import BaseModel, form
 
@@ -79,7 +79,7 @@ class AnswerData(BaseModel):
 
 class Answer(BaseModel):
     id: int
-    form: form.Form
+    form: Annotated[form.Form, Field(exclude=True)]
     data: AnswerData
 
     @field_validator("data")

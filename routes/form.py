@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 import database
 from models import FormData, Form
@@ -18,6 +18,29 @@ async def create_form(user: User, form_data: FormData) -> Form:
         session.add(form)
         await session.flush()
         await session.refresh(form)
+
+        return Form.model_validate(form)
+
+
+@router.put("/edit")
+async def edit_form(user: User, id: int, form_data: FormData) -> Form:
+    async with database.sessions.begin() as session:
+        stmt = select(database.Form).where(database.Form.id == id)
+        db_request = await session.execute(stmt)
+        form = db_request.scalar_one_or_none()
+
+        if form is None:
+            raise HTTPException(404, "Form not found")
+        if form.owner_id != user.id:
+            raise HTTPException(403, "Forbidden")
+
+        form.name = form_data.name
+        form.data = form_data.model_dump()
+
+        await session.flush()
+
+        stmt = delete(database.Answer).where(database.Answer.form_id == id)
+        await session.execute(stmt)
 
         return Form.model_validate(form)
 
