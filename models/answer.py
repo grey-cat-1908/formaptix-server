@@ -5,6 +5,7 @@ from typing import TypeAlias, Annotated
 from pydantic import field_validator, field_serializer, Field
 
 from models import BaseModel, form
+from utils import validate_tin, validate_snils
 
 
 class AnswerError(Enum):
@@ -13,7 +14,10 @@ class AnswerError(Enum):
     TOO_FEW_SELECTED = "The number of selected items is less than the minimum required."
     TOO_MANY_SELECTED = "The number of selected items is more than the maximum allowed."
     DUPLICATE_QUESTIONS = "Each value must correspond to a different question."
+    REQUIRED_QUIESTION_NOT_ANSWERED = "The required question was not answered."
     INCORRECT_IDS = "The ids for some questions are incorrect."
+    TIN_VALIDATION_FAILED = "The TIN validation process failed."
+    SNILS_VALIDATION_FAILED = "The SNILS validation process failed."
 
 
 class BaseValue(BaseModel):
@@ -34,6 +38,17 @@ class TextValue(BaseValue):
             raise ValueError(AnswerError.TOO_SHORT.value)
         if question.max_length and len(self.value) > question.max_length:
             raise ValueError(AnswerError.TOO_LONG.value)
+
+        if (
+            question.validator == form.TextValidator.tin
+            and validate_tin(self.value) is False
+        ):
+            raise ValueError(AnswerError.TIN_VALIDATION_FAILED.value)
+        if (
+            question.validator == form.TextValidator.snils
+            and validate_snils(self.value) is False
+        ):
+            raise ValueError(AnswerError.SNILS_VALIDATION_FAILED.value)
 
 
 class SelectorValue(BaseValue):

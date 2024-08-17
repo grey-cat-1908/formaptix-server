@@ -21,6 +21,11 @@ class QuestionType(IntEnum):
     selector = 2
 
 
+class TextValidator(IntEnum):
+    tin = 1
+    snils = 2
+
+
 class BaseQuestion(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     question_type: QuestionType
@@ -39,25 +44,33 @@ class Option(BaseModel):
 
 class TextQuestion(BaseQuestion):
     question_type: QuestionType = QuestionType.text
+    validator: TextValidator | None = None
     min_length: int | None = None
     max_length: int | None = None
 
     @field_validator("min_length")
     @classmethod
     def validate_min_length(cls, v, info):
-        if v is not None and v < 0:
-            raise ValueError(FormError.MIN_LENGTH_ERR.value)
+        validator = info.data.get("validator")
+        if v is not None:
+            if v < 0:
+                raise ValueError(FormError.MIN_LENGTH_ERR.value)
+            if validator is not None:
+                return None
         return v
 
     @field_validator("max_length")
     @classmethod
     def validate_max_length(cls, v, info):
         min_length = info.data.get("min_length")
+        validator = info.data.get("validator")
         if v is not None:
             if v <= 0:
                 raise ValueError(FormError.MAX_LENGTH_TOO_SMALL.value)
             if min_length is not None and v < min_length:
                 raise ValueError(FormError.MAX_LENGTH_LESS_THAN_MIN_LENGTH.value)
+            if validator is not None:
+                return None
         return v
 
 
@@ -89,9 +102,8 @@ class SelectorQuestion(BaseQuestion):
 Question: TypeAlias = SelectorQuestion | TextQuestion
 
 
-class FormData(BaseModel):
-    name: str = Field(min_length=1)
-    description: str | None = Field(None, min_length=1)
+class Page(BaseModel):
+    text: str | None = Field(None, min_length=1)
     questions: list[Question] = []
 
     @field_validator("questions")
@@ -105,6 +117,18 @@ class FormData(BaseModel):
             raise ValueError(FormError.SIMMILAR_ID_ERR.value)
 
         return v
+
+
+class FormData(BaseModel):
+    name: str = Field(min_length=1)
+    pages: list[Page] = []
+
+    @property
+    def questions(self) -> list[Question]:
+        questions = []
+        for page in self.pages:
+            questions.extend(page.questions)
+        return questions
 
 
 class Form(BaseModel):
