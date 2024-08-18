@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "inputly-server"
+name = "formaptix-server"
 version = "0.1.0"
 description = "Simple forms service backend"
 authors = ["Viktor K. <tech@arbuz.icu>"]

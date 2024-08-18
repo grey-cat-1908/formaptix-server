@@ -1,12 +1,12 @@
 version: "3"
 
 services:
-  inputly-server:
+  formaptix-server:
     build: "."
     restart: "always"
 
     environment:
-      - DATABASE=postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@inputly-database:5432/${DATABASE_NAME}
+      - DATABASE=postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@formaptix-database:5432/${DATABASE_NAME}
       - SECRET=${SECRET}
       - PORT=${PORT}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -14,9 +14,9 @@ services:
     ports:
       - ${PORT}:${PORT}
     depends_on:
-      - inputly-database
+      - formaptix-database
 
-  inputly-database:
+  formaptix-database:
     image: "postgres:bullseye"
     restart: "always"
 
@@ -25,7 +25,7 @@ services:
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=${DATABASE_NAME}
     volumes:
-      - inputly-database:/var/lib/postgresql/data
+      - formaptix-database:/var/lib/postgresql/data
 
 volumes:
-  inputly-database:
+  formaptix-database:

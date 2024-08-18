@@ -1,1 +1,3 @@
-ааа, нууу
+# Formaptix Server
+
+readme is coming
