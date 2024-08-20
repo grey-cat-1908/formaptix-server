@@ -74,10 +74,11 @@ async def user_forms(user: User):
 
 
 @router.get("/get")
-async def get_form(id: int) -> Form:
+async def get_form(id: int) -> Form | None:
     async with database.sessions.begin() as session:
         stmt = select(database.Form).where(database.Form.id == id)
         db_request = await session.execute(stmt)
         form = db_request.scalar_one_or_none()
 
-        return Form.model_validate(form)
+        if form is not None:
+            return Form.model_validate(form)

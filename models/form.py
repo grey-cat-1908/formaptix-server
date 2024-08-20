@@ -34,7 +34,7 @@ class BaseQuestion(BaseModel):
     question_type: QuestionType
     label: str = Field(min_length=1)
     description: str | None = Field(None, min_length=1)
-    image_url: str | None
+    image_url: str | None = None
     required: bool = True
 
     @field_serializer("id")
