@@ -18,6 +18,7 @@ class AnswerError(Enum):
     INCORRECT_IDS = "The ids for some questions are incorrect."
     TIN_VALIDATION_FAILED = "The TIN validation process failed."
     SNILS_VALIDATION_FAILED = "The SNILS validation process failed."
+    SCALE_VALUE_NOT_IN_RANGE = "The scale value must be within the specified range."
 
 
 class BaseValue(BaseModel):
@@ -51,6 +52,15 @@ class TextValue(BaseValue):
             raise ValueError(AnswerError.SNILS_VALIDATION_FAILED.value)
 
 
+class ScaleValue(BaseValue):
+    question_type: form.QuestionType = form.QuestionType.scale
+    value: int
+
+    def validate(self, question: form.ScaleQuestion) -> None:
+        if not (question.min_value <= self.value <= question.max_value):
+            raise ValueError(AnswerError.SCALE_VALUE_NOT_IN_RANGE.value)
+
+
 class SelectorValue(BaseValue):
     question_type: form.QuestionType = form.QuestionType.selector
     values: set[int]
@@ -69,7 +79,7 @@ class SelectorValue(BaseValue):
             raise ValueError(AnswerError.TOO_MANY_SELECTED.value)
 
 
-Value: TypeAlias = SelectorValue | TextValue
+Value: TypeAlias = SelectorValue | TextValue | ScaleValue
 
 
 class AnswerData(BaseModel):

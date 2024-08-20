@@ -14,11 +14,14 @@ class FormError(Enum):
     MIN_VALUES_ERR = "min_values must be greater than or equal to 1."
     MAX_VALUES_ERR = "max_values cannot be less than min_length or greater than the number of options."
     SIMMILAR_ID_ERR = "All questions must have different id's"
+    SCALE_MIN_VALUE_ERR = "min_value must be in range from 0 to 1"
+    SCALE_MAX_VALUE_ERR = "max_value must be in range from 2 to 10"
 
 
 class QuestionType(IntEnum):
     text = 1
     selector = 2
+    scale = 3
 
 
 class TextValidator(IntEnum):
@@ -76,6 +79,28 @@ class TextQuestion(BaseQuestion):
         return v
 
 
+class ScaleQuestion(BaseQuestion):
+    question_type: QuestionType = QuestionType.scale
+    min_value: int
+    min_label: str | None = None
+    max_value: int
+    max_label: str | None = None
+
+    @field_validator("min_value")
+    @classmethod
+    def validate_min_value(cls, v, info):
+        if v not in [0, 1]:
+            raise ValueError(FormError.SCALE_MIN_VALUE_ERR.value)
+        return v
+
+    @field_validator("max_value")
+    @classmethod
+    def validate_max_value(cls, v, info):
+        if v < 2 or v > 10:
+            raise ValueError(FormError.SCALE_MAX_VALUE_ERR.value)
+        return v
+
+
 class SelectorQuestion(BaseQuestion):
     question_type: QuestionType = QuestionType.selector
     min_values: int = 1
@@ -101,7 +126,7 @@ class SelectorQuestion(BaseQuestion):
         return v
 
 
-Question: TypeAlias = SelectorQuestion | TextQuestion
+Question: TypeAlias = SelectorQuestion | TextQuestion | ScaleQuestion
 
 
 class Page(BaseModel):
