@@ -83,7 +83,9 @@ class SelectorValue(BaseValue):
             raise ValueError(AnswerError.TOO_MANY_SELECTED.value)
 
 
-Value = Annotated[Union[SelectorValue, TextValue, ScaleValue], Field(discriminator='question_type')]
+Value = Annotated[
+    Union[SelectorValue, TextValue, ScaleValue], Field(discriminator="question_type")
+]
 
 
 class AnswerData(BaseModel):

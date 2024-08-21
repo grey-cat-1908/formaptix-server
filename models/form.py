@@ -131,7 +131,10 @@ class SelectorQuestion(BaseQuestion):
         return v
 
 
-Question = Annotated[Union[SelectorQuestion, TextQuestion, ScaleQuestion], Field(discriminator='question_type')]
+Question = Annotated[
+    Union[SelectorQuestion, TextQuestion, ScaleQuestion],
+    Field(discriminator="question_type"),
+]
 
 
 class Page(BaseModel):
