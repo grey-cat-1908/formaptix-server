@@ -1,6 +1,6 @@
 from enum import Enum
 from uuid import UUID
-from typing import TypeAlias, Annotated
+from typing import Annotated, Union, Literal
 
 from pydantic import field_validator, field_serializer, Field
 
@@ -31,7 +31,7 @@ class BaseValue(BaseModel):
 
 
 class TextValue(BaseValue):
-    question_type: form.QuestionType = form.QuestionType.text
+    question_type: Literal[form.QuestionType.text] = form.QuestionType.text
     value: str
 
     def validate(self, question: form.TextQuestion) -> None:
@@ -53,7 +53,7 @@ class TextValue(BaseValue):
 
 
 class ScaleValue(BaseValue):
-    question_type: form.QuestionType = form.QuestionType.scale
+    question_type: Literal[form.QuestionType.scale] = form.QuestionType.scale
     value: int
 
     def validate(self, question: form.ScaleQuestion) -> None:
@@ -62,13 +62,17 @@ class ScaleValue(BaseValue):
 
 
 class SelectorValue(BaseValue):
-    question_type: form.QuestionType = form.QuestionType.selector
+    question_type: Literal[form.QuestionType.selector] = form.QuestionType.selector
     values: set[int]
+
+    @field_serializer("values")
+    def serialize_values(self, values: set[int]):
+        return list(values)
 
     def validate(self, question: form.SelectorQuestion) -> None:
         min_values = max(question.min_values, 1) if question.min_values else 1
         max_values = (
-            min(question.max_values, question.options)
+            min(question.max_values, len(question.options))
             if question.max_values
             else len(question.options)
         )
@@ -79,7 +83,7 @@ class SelectorValue(BaseValue):
             raise ValueError(AnswerError.TOO_MANY_SELECTED.value)
 
 
-Value: TypeAlias = SelectorValue | TextValue | ScaleValue
+Value = Annotated[Union[SelectorValue, TextValue, ScaleValue], Field(discriminator='question_type')]
 
 
 class AnswerData(BaseModel):

@@ -1,5 +1,5 @@
 from enum import IntEnum, Enum
-from typing import TypeAlias
+from typing import Annotated, Union, Literal
 from uuid import UUID, uuid4
 
 from pydantic import Field, field_validator, field_serializer
@@ -16,6 +16,7 @@ class FormError(Enum):
     SIMMILAR_ID_ERR = "All questions must have different id's"
     SCALE_MIN_VALUE_ERR = "min_value must be in range from 0 to 1"
     SCALE_MAX_VALUE_ERR = "max_value must be in range from 2 to 10"
+    EMPTY_OPTIONS_ERR = "Options field cannot be empty"
 
 
 class QuestionType(IntEnum):
@@ -44,11 +45,11 @@ class BaseQuestion(BaseModel):
 
 class Option(BaseModel):
     label: str
-    image_url: str | None
+    image_url: str | None = None
 
 
 class TextQuestion(BaseQuestion):
-    question_type: QuestionType = QuestionType.text
+    question_type: Literal[QuestionType.text] = QuestionType.text
     validator: TextValidator | None = None
     min_length: int | None = None
     max_length: int | None = None
@@ -80,7 +81,7 @@ class TextQuestion(BaseQuestion):
 
 
 class ScaleQuestion(BaseQuestion):
-    question_type: QuestionType = QuestionType.scale
+    question_type: Literal[QuestionType.scale] = QuestionType.scale
     min_value: int
     min_label: str | None = None
     max_value: int
@@ -102,17 +103,22 @@ class ScaleQuestion(BaseQuestion):
 
 
 class SelectorQuestion(BaseQuestion):
-    question_type: QuestionType = QuestionType.selector
+    question_type: Literal[QuestionType.selector] = QuestionType.selector
     min_values: int = 1
     max_values: int | None = None
-    options: list[Option] = []
+    options: list[Option]
+
+    @field_validator("options")
+    @classmethod
+    def validate_options(cls, v, info):
+        if len(v) < 1:
+            raise ValueError(FormError.EMPTY_OPTIONS_ERR.value)
+        return v
 
     @field_validator("min_values")
     @classmethod
     def validate_min_values(cls, v, info):
-        options = info.data.get("options")
-        options = [] if not options else options
-        if v is not None and (v < 1 or v > len(options)):
+        if v is not None and v < 1:
             raise ValueError(FormError.MIN_VALUES_ERR.value)
         return v
 
@@ -120,13 +126,12 @@ class SelectorQuestion(BaseQuestion):
     @classmethod
     def validate_max_values(cls, v, info):
         min_values = info.data.get("min_values")
-        options = info.data.get("options")
-        if v is not None and (v > len(options) or min_values > v):
+        if v is not None and min_values > v:
             raise ValueError(FormError.MAX_VALUES_ERR.value)
         return v
 
 
-Question: TypeAlias = SelectorQuestion | TextQuestion | ScaleQuestion
+Question = Annotated[Union[SelectorQuestion, TextQuestion, ScaleQuestion], Field(discriminator='question_type')]
 
 
 class Page(BaseModel):
