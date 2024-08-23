@@ -36,6 +36,11 @@ async def login(auth: models.Auth) -> models.Token:
         )
 
 
+@router.post("/get")
+async def get(user: User) -> models.User:
+    return models.User(id=user.id, username=user.username)
+
+
 @router.put("/update/password")
 async def update_password(user: User, new: models.UpdatePassword):
     if len(new.password.strip()) == 0:
