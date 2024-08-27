@@ -121,11 +121,12 @@ class Answer(BaseModel):
         for question in questions:
             if question.required and question.id not in uuids:
                 raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED.value)
-            if question.question_type != uuids[question.id].question_type:
-                raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED.value)
-            uuids[question.id].validate(question)
-
-            del uuids[question.id]
+            if uuids.get(question.id):
+                if question.question_type != uuids[question.id].question_type:
+                    raise ValueError(AnswerError.REQUIRED_QUIESTION_NOT_ANSWERED.value)
+                uuids[question.id].validate(question)
+    
+                del uuids[question.id]
 
         if len(uuids) > 0:
             raise ValueError(AnswerError.INCORRECT_IDS.value)
