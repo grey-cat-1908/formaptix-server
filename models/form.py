@@ -53,6 +53,7 @@ class TextQuestion(BaseQuestion):
     validator: TextValidator | None = None
     min_length: int | None = None
     max_length: int | None = None
+    textarea: bool = False
 
     @field_validator("min_length")
     @classmethod
