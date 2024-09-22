@@ -31,7 +31,7 @@ async def login(auth: models.Auth) -> models.Token:
             id=user.id,
             username=user.username,
             token=jwt.encode(
-                {"sub": user.id}, settings.secret + user.password, "HS256"
+                {"sub": user.id}, settings.SECRET + user.password, "HS256"
             ),
         )
 

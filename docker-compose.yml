@@ -11,6 +11,8 @@ services:
       - PORT=${PORT}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - DISABLE_ADMIN=${DISABLE_ADMIN}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - FRONTEND_HOST=${FRONTEND_HOST}
     ports:
       - ${PORT}:${PORT}
     depends_on:

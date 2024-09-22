@@ -14,7 +14,7 @@ def hash_password(password: str, salt: str) -> str:
 
 
 def verify_admin(password: Annotated[str, Header(alias="x-token")]):
-    if password.strip() != settings.admin_password:
+    if password.strip() != settings.ADMIN_PASSWORD:
         raise HTTPException(401, "Unauthorized")
     return True
 
@@ -39,7 +39,7 @@ async def verify_user(token: Annotated[str, Header(alias="x-token")]) -> databas
             raise HTTPException(401, "Invalid token")
 
         try:
-            jwt.decode(token, settings.secret + user.password, algorithms=["HS256"])
+            jwt.decode(token, settings.SECRET + user.password, algorithms=["HS256"])
         except jwt.exceptions.InvalidSignatureError:
             raise HTTPException(401, "Invalid token")
 

@@ -16,7 +16,7 @@ async def create_user(auth: user.Auth, admin_token: Admin):
         raise HTTPException(400, "Username must not be empty")
     if len(auth.password.strip()) == 0:
         raise HTTPException(400, "Password must not be empty")
-    if settings.disable_admin:
+    if settings.DISABLE_ADMIN:
         raise HTTPException(403, "You are not admin")
 
     salt = secrets.token_hex(8)
